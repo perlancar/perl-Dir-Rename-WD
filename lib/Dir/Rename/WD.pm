@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Cwd 'cwd';
-use Errno; # Perl automatically loads "Errno" the first time you use "%!", so you don't need an explicit "use". but we want to inform prereq scanners
+use Errno qw(EINVAL EBUSY);
 use Exporter qw(import);
 
 # AUTHORITY
@@ -15,21 +15,21 @@ use Exporter qw(import);
 our @EXPORT_OK = qw(rename_wd);
 
 sub rename_wd {
-    defined(my $new_name = shift) or do { $! = $!{EINVAL}; return };
-    @_ and do { $! = $!{EINVAL}; return };
+    defined(my $new_name = shift) or do { $! = EINVAL; return };
+    @_ and do { $! = EINVAL; return };
 
     # check new name
-    length $new_name or do { $! = $!{EINVAL}; return };
+    length $new_name or do { $! = EINVAL; return };
     $new_name =~ s!\\!/!g if $^O eq 'MSWin32';
-    $new_name =~ m!/! and do { $! = $!{EINVAL}; return };
+    $new_name =~ m!/! and do { $! = EINVAL; return };
     $new_name eq '.' and return 1;
-    $new_name eq '..' and do { $! = $!{EINVAL}; return };
+    $new_name eq '..' and do { $! = EINVAL; return };
 
     # up one dir
     my $cwd = cwd();
     $cwd =~ s!\\!/!g if $^O eq 'MSWin32';
     $cwd =~ s!.+/!!;
-    if ($cwd eq '/') { $! = $!{EBUSY}; return }
+    if ($cwd eq '/') { $! = EBUSY; return }
     chdir ".." or return;
 
     # rename
